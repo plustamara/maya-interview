@@ -10,19 +10,42 @@ type Post = {
 };
 
 type Status = "idle" | "loading" | "success" | "error";
+type Scenario = "success" | "slow" | "http-error" | "empty";
+
+const POSTS_URL = "https://jsonplaceholder.typicode.com/posts?userId=1";
+
+// Success and Slow use the real API. HTTP error and Empty are local simulations.
+async function getPostsResponse(scenario: Scenario): Promise<Response> {
+  if (scenario === "http-error") {
+    return new Response(null, { status: 503 });
+  }
+
+  if (scenario === "empty") {
+    return new Response(JSON.stringify([]), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
+  if (scenario === "slow") {
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+  }
+
+  return fetch(POSTS_URL);
+}
 
 export default function PostsExplorer() {
   const [status, setStatus] = useState<Status>("idle");
   const [posts, setPosts] = useState<Post[]>([]);
   const [errorMessage, setErrorMessage] = useState("");
+  const [scenario, setScenario] = useState<Scenario>("success");
 
   async function loadPosts() {
     setStatus("loading");
+    setErrorMessage("");
 
     try {
-      const response = await fetch(
-        "https://jsonplaceholder.typicode.com/posts?userId=1"
-      );
+      const response = await getPostsResponse(scenario);
 
       if (!response.ok) {
         throw new ApiError("Posts request failed", response.status);
@@ -50,6 +73,26 @@ export default function PostsExplorer() {
   return (
     <section>
       <h2>Explore all posts</h2>
+
+      <div>
+        <label htmlFor="scenario">Demo scenario: </label>
+        <select
+          id="scenario"
+          value={scenario}
+          onChange={(event) => setScenario(event.target.value as Scenario)}
+          disabled={status === "loading"}
+        >
+          <option value="success">Success (real API)</option>
+          <option value="slow">Slow (2-second wait, then real API)</option>
+          <option value="http-error">HTTP error (simulated 503)</option>
+          <option value="empty">Empty (simulated empty list)</option>
+        </select>
+        <p>
+          HTTP error and Empty are local simulations. They are not responses
+          from JSONPlaceholder. The choice applies to the next Load or Try
+          again click.
+        </p>
+      </div>
 
       {status === "idle" && (
         <p>Click the button to load all posts for this employee.</p>
