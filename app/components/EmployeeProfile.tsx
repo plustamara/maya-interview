@@ -1,3 +1,5 @@
+import { ApiError } from "../lib/ApiError";
+
 type Employee = {
   name: string;
   email: string;
@@ -10,30 +12,36 @@ async function getEmployee(): Promise<Employee> {
   const response = await fetch("https://jsonplaceholder.typicode.com/users/1");
 
   if (!response.ok) {
-    throw new Error("Profile request failed with status " + response.status);
+    throw new ApiError("Profile request failed", response.status);
   }
 
   return response.json();
 }
 
 export default async function EmployeeProfile() {
-  try {
-    const employee = await getEmployee();
+  let employee: Employee | null = null;
 
-    return (
-      <section>
-        <h2>Employee profile</h2>
-        <p>Name: {employee.name}</p>
-        <p>Email: {employee.email}</p>
-        <p>Company: {employee.company.name}</p>
-      </section>
-    );
+  try {
+    employee = await getEmployee();
   } catch {
+    employee = null;
+  }
+
+  if (!employee) {
     return (
       <section>
         <h2>Employee profile</h2>
-        <p>Sorry, we couldn't load the employee profile right now.</p>
+        <p>Sorry, we could not load the employee profile right now.</p>
       </section>
     );
   }
+
+  return (
+    <section>
+      <h2>Employee profile</h2>
+      <p>Name: {employee.name}</p>
+      <p>Email: {employee.email}</p>
+      <p>Company: {employee.company.name}</p>
+    </section>
+  );
 }

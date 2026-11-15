@@ -1,5 +1,5 @@
-// app/components/RecentPosts.tsx
 import { connection } from "next/server";
+import { ApiError } from "../lib/ApiError";
 
 type Post = {
   id: number;
@@ -12,7 +12,7 @@ async function getPosts(): Promise<Post[]> {
   );
 
   if (!response.ok) {
-    throw new Error("Posts request failed with status " + response.status);
+    throw new ApiError("Posts request failed", response.status);
   }
 
   return response.json();
@@ -26,25 +26,31 @@ export default async function RecentPosts() {
   // so we can see the Suspense fallback. Not part of a real app.
   await new Promise((resolve) => setTimeout(resolve, 2000));
 
-  try {
-    const posts = await getPosts();
+  let posts: Post[] | null = null;
 
-    return (
-      <section>
-        <h2>Recent posts</h2>
-        <ul>
-          {posts.slice(0, 3).map((post) => (
-            <li key={post.id}>{post.title}</li>
-          ))}
-        </ul>
-      </section>
-    );
+  try {
+    posts = await getPosts();
   } catch {
+    posts = null;
+  }
+
+  if (!posts) {
     return (
       <section>
         <h2>Recent posts</h2>
-        <p>Sorry, we couldn't load the recent posts right now.</p>
+        <p>Sorry, we could not load the recent posts right now.</p>
       </section>
     );
   }
+
+  return (
+    <section>
+      <h2>Recent posts</h2>
+      <ul>
+        {posts.slice(0, 3).map((post) => (
+          <li key={post.id}>{post.title}</li>
+        ))}
+      </ul>
+    </section>
+  );
 }
