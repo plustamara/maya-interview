@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ApiError } from "../lib/ApiError";
 
 type Post = {
   id: number;
@@ -13,6 +14,7 @@ type Status = "idle" | "loading" | "success" | "error";
 export default function PostsExplorer() {
   const [status, setStatus] = useState<Status>("idle");
   const [posts, setPosts] = useState<Post[]>([]);
+  const [errorMessage, setErrorMessage] = useState("");
 
   async function loadPosts() {
     setStatus("loading");
@@ -23,13 +25,24 @@ export default function PostsExplorer() {
       );
 
       if (!response.ok) {
-        throw new Error("Posts request failed with status " + response.status);
+        throw new ApiError("Posts request failed", response.status);
       }
 
       const data: Post[] = await response.json();
       setPosts(data);
       setStatus("success");
-    } catch {
+    } catch (error) {
+      if (error instanceof ApiError) {
+        setErrorMessage(
+          "The server answered with an error (status " +
+            error.status +
+            "). Please try again."
+        );
+      } else {
+        setErrorMessage(
+          "Network problem. Check your connection and try again."
+        );
+      }
       setStatus("error");
     }
   }
@@ -42,9 +55,7 @@ export default function PostsExplorer() {
         <p>Click the button to load all posts for this employee.</p>
       )}
 
-      {status === "error" && (
-        <p>Sorry, we couldn't load the posts. Please try again.</p>
-      )}
+      {status === "error" && <p>{errorMessage}</p>}
 
       {status === "success" && posts.length === 0 && <p>No posts found</p>}
 
