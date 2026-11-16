@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { ApiError } from "../lib/ApiError";
 
 type Post = {
@@ -39,8 +39,14 @@ export default function PostsExplorer() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [errorMessage, setErrorMessage] = useState("");
   const [scenario, setScenario] = useState<Scenario>("success");
+  const isLoadingRef = useRef(false);
 
   async function loadPosts() {
+    if (isLoadingRef.current) {
+      return;
+    }
+    isLoadingRef.current = true;
+
     setStatus("loading");
     setErrorMessage("");
 
@@ -67,6 +73,8 @@ export default function PostsExplorer() {
         );
       }
       setStatus("error");
+    } finally {
+      isLoadingRef.current = false;
     }
   }
 
@@ -74,8 +82,8 @@ export default function PostsExplorer() {
     <section>
       <h2>Explore all posts</h2>
 
-      <div>
-        <label htmlFor="scenario">Demo scenario: </label>
+      <div className="scenario">
+        <label htmlFor="scenario">Demo scenario</label>
         <select
           id="scenario"
           value={scenario}
@@ -87,7 +95,7 @@ export default function PostsExplorer() {
           <option value="http-error">HTTP error (simulated 503)</option>
           <option value="empty">Empty (simulated empty list)</option>
         </select>
-        <p>
+        <p className="note">
           HTTP error and Empty are local simulations. They are not responses
           from JSONPlaceholder. The choice applies to the next Load or Try
           again click.
@@ -98,7 +106,7 @@ export default function PostsExplorer() {
         <p>Click the button to load all posts for this employee.</p>
       )}
 
-      {status === "error" && <p>{errorMessage}</p>}
+      {status === "error" && <p className="error">{errorMessage}</p>}
 
       {status === "success" && posts.length === 0 && <p>No posts found</p>}
 

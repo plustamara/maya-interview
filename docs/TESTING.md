@@ -10,7 +10,7 @@ Tested in: Chrome Browser on laptop
 | Server profile | Name, email, company of employee 1 shown | pass |
 | Server preview | Fallback shows for about 2 seconds, page title and profile stay visible, then 3 titles | pass |
 | Client idle | No posts request in the Network panel before the first click | pass |
-| Client slow | "Loading..." shows, button disabled, no duplicate requests | | |
+| Client slow | "Loading..." shows, button disabled, no duplicate requests | With the Slow scenario, the button showed "Loading..." and was disabled for about 2 seconds, clicking it again did nothing, and the Network panel showed one posts request. Then the posts appeared. | Pass |
 | Client success | Titles and bodies appear | pass |
 | HTTP failure | Simulated 503 creates ApiError, message with status shown, Try again available | pass |
 | Empty response | "No posts found" shown, no error message | pass |
